@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">SwipeLayout</string>
+    
+    <string name="direction_left">DIRECTION LEFT</string>
+    <string name="direction_up">DIRECTION UP</string>
+    <string name="direction_right">DIRECTION RIGHT</string>
+    <string name="direction_down">DIRECTION DOWN</string>
+
+    <string name="slide_outside">SLIDE_OUTSIDE</string>
+</resources>

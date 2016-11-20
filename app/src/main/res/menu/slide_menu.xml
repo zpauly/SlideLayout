@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:id="@+id/slide_grp"
+        android:checkableBehavior="single">
+        <item android:id="@+id/direction_left"
+            android:title="@string/direction_left"
+            android:checked="true"/>
+        <item android:id="@+id/direction_up"
+            android:title="@string/direction_up"/>
+        <item android:id="@+id/direction_right"
+            android:title="@string/direction_right"/>
+        <item android:id="@+id/direction_down"
+            android:title="@string/direction_down"/>
+    </group>
+</menu>
