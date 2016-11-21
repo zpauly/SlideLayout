@@ -26,7 +26,7 @@
 ```groovy
 	dependencies {
 	        compile 'com.github.zpauly:SlideLayout:v1.0.0'
-	}gr
+	}
 ```
 
 **maven**
@@ -170,7 +170,7 @@ mSlideLayout.setCallback(new SlideLayout.Callback() {
 
 由于本人水平有限，如果你有什么意见或者发现有什么bug，欢迎issue或是给我发邮件，我在这里表示对大家的感谢。
 
-邮箱：[zpauly1996@gmail.com](mailto:zpauly1996@gmail,com)
+邮箱：[zpauly1996@gmail.com](mailto:zpauly1996@gmail.com)
 
 
 
