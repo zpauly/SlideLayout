@@ -269,8 +269,8 @@ public class SlideLayout extends FrameLayout {
         }
     }
 
-    private boolean horizontalSmoothSlideTo(View child, int aimPosition) {
-        if (hasNoLayout) {
+    public boolean horizontalSmoothSlideTo(View child, int aimPosition) {
+        if (hasNoLayout && (mSlideDirection == DIRECTION_LEFT || mSlideDirection == DIRECTION_RIGHT)) {
             return false;
         }
         if (mDragHelper.smoothSlideViewTo(child, aimPosition, childPaddingTop)) {
@@ -280,8 +280,8 @@ public class SlideLayout extends FrameLayout {
         return false;
     }
 
-    private boolean verticalSmoothSlideTo(View child, int aimPosition) {
-        if (hasNoLayout) {
+    public boolean verticalSmoothSlideTo(View child, int aimPosition) {
+        if (hasNoLayout && (mSlideDirection == DIRECTION_DOWN || mSlideDirection == DIRECTION_UP)) {
             return false;
         }
         if (mDragHelper.smoothSlideViewTo(child, childPaddingLeft, aimPosition)) {

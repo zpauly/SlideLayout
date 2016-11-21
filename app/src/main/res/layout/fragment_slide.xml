@@ -7,7 +7,6 @@
     <com.zpauly.swipeLayout.SlideLayout
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:id="@+id/sl_layout"
-        android:padding="10dp"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
