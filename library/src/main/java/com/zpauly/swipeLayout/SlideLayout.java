@@ -269,8 +269,19 @@ public class SlideLayout extends FrameLayout {
         }
     }
 
-    public boolean horizontalSmoothSlideTo(View child, int aimPosition) {
-        if (hasNoLayout && (mSlideDirection == DIRECTION_LEFT || mSlideDirection == DIRECTION_RIGHT)) {
+    public boolean horizontalSmoothSlideTo(int left) {
+        return horizontalSmoothSlideTo(mSlideView, left);
+    }
+
+    public boolean verticalSmoothSlideTo(int top) {
+        return verticalSmoothSlideTo(mSlideView, top);
+    }
+
+    private boolean horizontalSmoothSlideTo(View child, int aimPosition) {
+        if (hasNoLayout) {
+            return false;
+        }
+        if (mSlideDirection == DIRECTION_UP || mSlideDirection == DIRECTION_DOWN) {
             return false;
         }
         if (mDragHelper.smoothSlideViewTo(child, aimPosition, childPaddingTop)) {
@@ -281,7 +292,10 @@ public class SlideLayout extends FrameLayout {
     }
 
     public boolean verticalSmoothSlideTo(View child, int aimPosition) {
-        if (hasNoLayout && (mSlideDirection == DIRECTION_DOWN || mSlideDirection == DIRECTION_UP)) {
+        if (hasNoLayout) {
+            return false;
+        }
+        if (mSlideDirection == DIRECTION_LEFT || mSlideDirection == DIRECTION_RIGHT ) {
             return false;
         }
         if (mDragHelper.smoothSlideViewTo(child, childPaddingLeft, aimPosition)) {
@@ -476,7 +490,7 @@ public class SlideLayout extends FrameLayout {
     }
 
     public interface Callback {
-        void onSliding(View frontView, int left, int top, int dx, int dy);
+        void onSliding(View slideView, int left, int top, int dx, int dy);
 
         void onSlideStateChanged(int newState);
     }

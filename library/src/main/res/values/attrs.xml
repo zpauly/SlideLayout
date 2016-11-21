@@ -5,7 +5,6 @@
         <attr name="ratioOfBackToShow" format="float" />
         <attr name="ratioOfAutoSlideDirectionChange" format="float" />
         <attr name="enableSlideAuto" format="boolean" />
-        <attr name="enableSlideOutside" format="boolean" />
         <attr name="enableSlide" format="boolean" />
     </declare-styleable>
 </resources>
