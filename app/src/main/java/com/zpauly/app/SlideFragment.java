@@ -27,7 +27,7 @@ public class SlideFragment extends Fragment {
     public static final int RIGHT = 2;
     public static final int DOWN = 3;
 
-    private SlideLayout mSlidelayout;
+    private SlideLayout mSlideLayout;
 
     private int direction;
 
@@ -49,23 +49,24 @@ public class SlideFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_slide, container, false);
-        mSlidelayout = (SlideLayout) view.findViewById(R.id.sl_layout);
+        mSlideLayout = (SlideLayout) view.findViewById(R.id.sl_layout);
         switch (direction) {
             case LEFT:
-                mSlidelayout.setSlideDirection(SlideDirection.DIRECTION_LEFT);
+                mSlideLayout.setSlideDirection(SlideDirection.DIRECTION_LEFT);
                 break;
             case UP:
-                mSlidelayout.setSlideDirection(SlideDirection.DIRECTION_UP);
+                mSlideLayout.setSlideDirection(SlideDirection.DIRECTION_UP);
                 break;
             case RIGHT:
-                mSlidelayout.setSlideDirection(SlideDirection.DIRECTION_RIGHT);
+                mSlideLayout.setSlideDirection(SlideDirection.DIRECTION_RIGHT);
                 break;
             case DOWN:
-                mSlidelayout.setSlideDirection(SlideDirection.DIRECTION_DOWN);
+                mSlideLayout.setSlideDirection(SlideDirection.DIRECTION_DOWN);
                 break;
             default:
                 break;
         }
+        mSlideLayout.setRatioOfResistance(0f);
         return view;
     }
 

@@ -26,8 +26,8 @@ public class SlideLayout extends FrameLayout {
     public static final String TAG = SlideLayout.class.getName();
 
     private static final float DEFAULT_RATIO_OF_RESISTANCE = 0.3f;
-    private static final float DEFAULT_RATIO_OF_BACK_TO_SHOW = 0.3f;
-    private static final float DEFAULT_RATIO_OF_CHANGE_TEASE_DIRECTION = 0.7f;
+    private static final float DEFAULT_RATIO_OF_BACK_TO_SHOW = 1f;
+    private static final float DEFAULT_RATIO_OF_CHANGE_TEASE_DIRECTION = 0.3f;
 
     private static final int STATE_SLIDING = 0;
     private static final int STATE_IDLE = 1;
@@ -35,10 +35,9 @@ public class SlideLayout extends FrameLayout {
     private ViewDragHelper mDragHelper;
     private DragCallback mDragCallback;
 
-    private boolean hasTwoLayout = false;
+    private boolean hasNoLayout = true;
 
-    private View mFrontLayout;
-    private View mBehindLayout;
+    private View mSlideView;
 
     private float startXLocation;
     private float startYLocation;
@@ -48,7 +47,6 @@ public class SlideLayout extends FrameLayout {
     private float ratioOfBackToShow;
     private float ratioOfAutoSlideDirectionChange;
     private boolean enableSlideAuto;
-    private boolean enableSlideOutside;
     private boolean enableSlide;
 
     private int mWidth;
@@ -61,8 +59,6 @@ public class SlideLayout extends FrameLayout {
     private float mSlideWidth;
     private float mSlideHeight;
     private float movedDistance;
-    private float slidingEdgePosition;
-    private float edge;
 
     private int startChildLeft;
     private int startChildTop;
@@ -105,11 +101,31 @@ public class SlideLayout extends FrameLayout {
         ratioOfAutoSlideDirectionChange = typedArray.getFloat(R.styleable.SlideLayout_ratioOfAutoSlideDirectionChange, DEFAULT_RATIO_OF_CHANGE_TEASE_DIRECTION);
         enableSlide = typedArray.getBoolean(R.styleable.SlideLayout_enableSlide, true);
         enableSlideAuto = typedArray.getBoolean(R.styleable.SlideLayout_enableSlideAuto, true);
-        enableSlideOutside = typedArray.getBoolean(R.styleable.SlideLayout_enableSlideOutside, true);
         typedArray.recycle();
 
         mDragCallback = new DragCallback();
         mDragHelper = ViewDragHelper.create(this, 1.0f, mDragCallback);
+    }
+
+    private void getParams() {
+        mChildWidth = mSlideView.getWidth();
+        mChildHeight = mSlideView.getHeight();
+
+        computeBackContent();
+
+        mSlideWidth = mChildWidth * ratioOfBackToShow * ratioOfAutoSlideDirectionChange;
+        mSlideHeight = mChildHeight * ratioOfBackToShow * ratioOfAutoSlideDirectionChange;
+
+        startChildLeft = mSlideView.getLeft();
+        startChildTop = mSlideView.getTop();
+        startChildRight = mSlideView.getRight();
+        startChildBottom = mSlideView.getBottom();
+
+        MarginLayoutParams lp = (MarginLayoutParams) mSlideView.getLayoutParams();
+        childPaddingLeft = getPaddingLeft() + lp.leftMargin;
+        childPaddingTop = getPaddingTop() + lp.topMargin;
+        childPaddingRight = getPaddingRight() + lp.rightMargin;
+        childPaddingBottom = getPaddingBottom() + lp.bottomMargin;
     }
 
     public void enableSlide(boolean enableSlide) {
@@ -118,11 +134,6 @@ public class SlideLayout extends FrameLayout {
 
     public void enableSlideAuto(boolean enable) {
         this.enableSlideAuto = enable;
-    }
-
-    public void enableSlideOutside(boolean enable) {
-        this.enableSlideOutside = enable;
-        computeBackContent();
     }
 
     public void setSlideDirection(SlideDirection direction) {
@@ -159,10 +170,6 @@ public class SlideLayout extends FrameLayout {
         return enableSlideAuto;
     }
 
-    public boolean isEnableSlideOutside() {
-        return enableSlideOutside;
-    }
-
     public SlideDirection getSlideDirection() {
         return mSlideDirection;
     }
@@ -186,16 +193,16 @@ public class SlideLayout extends FrameLayout {
     public void slideBack() {
         switch (mSlideDirection) {
             case DIRECTION_LEFT:
-                horizontalSmoothSlideTo(mFrontLayout, startChildRight);
+                horizontalSmoothSlideTo(mSlideView, startChildRight);
                 break;
             case DIRECTION_UP:
-                verticalSmoothSlideTo(mFrontLayout, startChildBottom);
+                verticalSmoothSlideTo(mSlideView, startChildBottom);
                 break;
             case DIRECTION_RIGHT:
-                horizontalSmoothSlideTo(mFrontLayout, startChildLeft);
+                horizontalSmoothSlideTo(mSlideView, startChildLeft);
                 break;
             case DIRECTION_DOWN:
-                verticalSmoothSlideTo(mFrontLayout, startChildTop);
+                verticalSmoothSlideTo(mSlideView, startChildTop);
                 break;
             default:
                 break;
@@ -205,57 +212,42 @@ public class SlideLayout extends FrameLayout {
     public void slideForward() {
         switch (mSlideDirection) {
             case DIRECTION_LEFT:
-                horizontalSmoothSlideTo(mFrontLayout, startChildRight - mBackContentWidth);
+                horizontalSmoothSlideTo(mSlideView, startChildRight - mBackContentWidth);
                 break;
             case DIRECTION_UP:
-                verticalSmoothSlideTo(mFrontLayout, startChildBottom - mBackContentHeight);
+                verticalSmoothSlideTo(mSlideView, startChildBottom - mBackContentHeight);
                 break;
             case DIRECTION_RIGHT:
-                horizontalSmoothSlideTo(mFrontLayout, startChildLeft + mBackContentWidth);
+                horizontalSmoothSlideTo(mSlideView, startChildLeft + mBackContentWidth);
                 break;
             case DIRECTION_DOWN:
-                verticalSmoothSlideTo(mFrontLayout, startChildTop + mBackContentHeight);
+                verticalSmoothSlideTo(mSlideView, startChildTop + mBackContentHeight);
                 break;
             default:
                 break;
         }
     }
 
+    public void resetSlideView(int index) {
+        this.mSlideView = getChildAt(index);
+        getParams();
+    }
+
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         super.onLayout(changed, left, top, right, bottom);
-        if (getChildCount() == 2) {
-            this.hasTwoLayout = true;
-        } else if (getChildCount() > 2){
-            throw new IllegalStateException("SlideLayout has more than two child.");
+        if (getChildCount() == 0) {
+            hasNoLayout = true;
+            return;
+        } else {
+            mSlideView = getChildAt(getChildCount() - 1);
+            hasNoLayout = false;
         }
-
-        mFrontLayout = getChildAt(1);
-        mBehindLayout = getChildAt(0);
 
         mWidth = getWidth();
         mHeight = getHeight();
 
-        mChildWidth = mFrontLayout.getWidth();
-        mChildHeight = mFrontLayout.getHeight();
-
-        computeBackContent();
-
-        mSlideWidth = mChildWidth * ratioOfBackToShow * ratioOfAutoSlideDirectionChange;
-        mSlideHeight = mChildHeight * ratioOfBackToShow * ratioOfAutoSlideDirectionChange;
-
-        startChildLeft = mFrontLayout.getLeft();
-        startChildTop = mFrontLayout.getTop();
-        startChildRight = mFrontLayout.getRight();
-        startChildBottom = mFrontLayout.getBottom();
-
-
-
-        MarginLayoutParams lp = (MarginLayoutParams) mFrontLayout.getLayoutParams();
-        childPaddingLeft = getPaddingLeft() + lp.leftMargin;
-        childPaddingTop = getPaddingTop() + lp.topMargin;
-        childPaddingRight = getPaddingRight() + lp.rightMargin;
-        childPaddingBottom = getPaddingBottom() + lp.bottomMargin;
+        getParams();
     }
 
     private void computeBackContent() {
@@ -278,6 +270,9 @@ public class SlideLayout extends FrameLayout {
     }
 
     private boolean horizontalSmoothSlideTo(View child, int aimPosition) {
+        if (hasNoLayout) {
+            return false;
+        }
         if (mDragHelper.smoothSlideViewTo(child, aimPosition, childPaddingTop)) {
             ViewCompat.postInvalidateOnAnimation(this);
             return true;
@@ -286,6 +281,9 @@ public class SlideLayout extends FrameLayout {
     }
 
     private boolean verticalSmoothSlideTo(View child, int aimPosition) {
+        if (hasNoLayout) {
+            return false;
+        }
         if (mDragHelper.smoothSlideViewTo(child, childPaddingLeft, aimPosition)) {
             ViewCompat.postInvalidateOnAnimation(this);
             return true;
@@ -302,7 +300,7 @@ public class SlideLayout extends FrameLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (enableSlide) {
+        if (enableSlide && !hasNoLayout) {
             int action = MotionEventCompat.getActionMasked(event);
             switch (action) {
                 case MotionEvent.ACTION_DOWN:
@@ -351,53 +349,39 @@ public class SlideLayout extends FrameLayout {
 
     private class DragCallback extends ViewDragHelper.Callback {
 
-        private int horizontalDistanceToShow;
-        private int verticalDistanceToShow;
-
-        private void computeDistanceToShow() {
-            if (enableSlideOutside) {
-                horizontalDistanceToShow = mChildWidth;
-                verticalDistanceToShow = mChildHeight;
-            } else {
-                horizontalDistanceToShow = mBackContentWidth;
-                verticalDistanceToShow = mBackContentHeight;
-            }
-        }
-
         @Override
         public void onViewReleased(View releasedChild, float xvel, float yvel) {
             if (!enableSlideAuto) {
                 return;
             }
-            computeDistanceToShow();
             startXLocation = 0;
             switch (mSlideDirection) {
                 case DIRECTION_UP:
-                    if (mFrontLayout.getBottom() > startChildBottom - mSlideHeight) {
-                        verticalSmoothSlideTo(mFrontLayout, startChildTop);
-                    } else if (mFrontLayout.getBottom() <= startChildBottom - mSlideHeight) {
-                        verticalSmoothSlideTo(mFrontLayout, startChildTop - verticalDistanceToShow);
+                    if (mSlideView.getBottom() > startChildBottom - mSlideHeight) {
+                        verticalSmoothSlideTo(mSlideView, startChildTop);
+                    } else if (mSlideView.getBottom() <= startChildBottom - mSlideHeight) {
+                        verticalSmoothSlideTo(mSlideView, startChildTop - mBackContentHeight);
                     }
                     break;
                 case DIRECTION_DOWN:
-                    if (mFrontLayout.getTop() < startChildTop + mSlideHeight) {
-                        verticalSmoothSlideTo(mFrontLayout, startChildTop);
-                    } else if (mFrontLayout.getTop() >= startChildTop + mSlideHeight) {
-                        verticalSmoothSlideTo(mFrontLayout, startChildTop + verticalDistanceToShow);
+                    if (mSlideView.getTop() < startChildTop + mSlideHeight) {
+                        verticalSmoothSlideTo(mSlideView, startChildTop);
+                    } else if (mSlideView.getTop() >= startChildTop + mSlideHeight) {
+                        verticalSmoothSlideTo(mSlideView, startChildTop + mBackContentHeight);
                     }
                     break;
                 case DIRECTION_LEFT:
-                    if (mFrontLayout.getRight() > startChildRight - mSlideWidth) {
-                        horizontalSmoothSlideTo(mFrontLayout, startChildLeft);
-                    } else if (mFrontLayout.getRight() <= startChildRight - mSlideWidth) {
-                        horizontalSmoothSlideTo(mFrontLayout, startChildLeft - horizontalDistanceToShow);
+                    if (mSlideView.getRight() > startChildRight - mSlideWidth) {
+                        horizontalSmoothSlideTo(mSlideView, startChildLeft);
+                    } else if (mSlideView.getRight() <= startChildRight - mSlideWidth) {
+                        horizontalSmoothSlideTo(mSlideView, startChildLeft - mBackContentWidth);
                     }
                     break;
                 case DIRECTION_RIGHT:
-                    if (mFrontLayout.getLeft() < startChildLeft + mSlideWidth) {
-                        horizontalSmoothSlideTo(mFrontLayout, startChildLeft);
-                    } else if (mFrontLayout.getLeft() >= startChildLeft + mSlideWidth) {
-                        horizontalSmoothSlideTo(mFrontLayout, startChildLeft + horizontalDistanceToShow);
+                    if (mSlideView.getLeft() < startChildLeft + mSlideWidth) {
+                        horizontalSmoothSlideTo(mSlideView, startChildLeft);
+                    } else if (mSlideView.getLeft() >= startChildLeft + mSlideWidth) {
+                        horizontalSmoothSlideTo(mSlideView, startChildLeft + mBackContentWidth);
                     }
                     break;
                 default:
@@ -408,7 +392,7 @@ public class SlideLayout extends FrameLayout {
 
         @Override
         public int getViewHorizontalDragRange(View child) {
-            if (child == mFrontLayout) {
+            if (child != mSlideView) {
                 return 0;
             }
             if (mSlideDirection == DIRECTION_LEFT || mSlideDirection == DIRECTION_RIGHT) {
@@ -420,7 +404,7 @@ public class SlideLayout extends FrameLayout {
 
         @Override
         public int getViewVerticalDragRange(View child) {
-            if (child == mFrontLayout) {
+            if (child != mSlideView) {
                 return 0;
             }
             if (mSlideDirection == DIRECTION_UP || mSlideDirection == DIRECTION_DOWN) {
@@ -447,28 +431,28 @@ public class SlideLayout extends FrameLayout {
             if (mCallback == null) {
                 return;
             }
-            mCallback.onSliding(mFrontLayout, left, top, dx, dy);
+            mCallback.onSliding(mSlideView, left, top, dx, dy);
             invalidate();
         }
 
         @Override
         public boolean tryCaptureView(View child, int pointerId) {
-            boolean result = ((child == mFrontLayout)
-                    && enableSlide);
+            boolean result = ((child == mSlideView)
+                    && enableSlide
+                    && !hasNoLayout);
             return result;
         }
 
 
         @Override
         public int clampViewPositionHorizontal(View child, int left, int dx) {
-            computeDistanceToShow();
             if (mSlideDirection == DIRECTION_RIGHT) {
                 int limitLeft = startChildLeft;
-                int limitRight = startChildLeft + horizontalDistanceToShow;
+                int limitRight = startChildLeft + mBackContentWidth;
                 return Math.max(limitLeft, Math.min(left, limitRight));
             }
             if (mSlideDirection == DIRECTION_LEFT) {
-                int limitLeft = startChildLeft - horizontalDistanceToShow;
+                int limitLeft = startChildLeft - mBackContentWidth;
                 int limitRight = startChildLeft;
                 return Math.max(limitLeft, Math.min(left, limitRight));
             }
@@ -477,15 +461,14 @@ public class SlideLayout extends FrameLayout {
 
         @Override
         public int clampViewPositionVertical(View child, int top, int dy) {
-            computeDistanceToShow();
             if (mSlideDirection == DIRECTION_UP) {
-                int limitTop = startChildTop - verticalDistanceToShow;
+                int limitTop = startChildTop - mBackContentHeight;
                 int limitBottom = startChildTop;
                 return Math.max(limitTop, Math.min(top, limitBottom));
             }
             if (mSlideDirection == DIRECTION_DOWN) {
                 int limitTop = startChildTop;
-                int limitBottom = startChildTop + verticalDistanceToShow;
+                int limitBottom = startChildTop + mBackContentHeight;
                 return Math.max(limitTop, Math.min(top, limitBottom));
             }
             return startChildTop;
